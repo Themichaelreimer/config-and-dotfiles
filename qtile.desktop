@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Qtile
+Comment=Tiling window manager
+Exec=startx & qtile start
+Type=Application
+keywords=wm,tiling
