@@ -33,14 +33,22 @@ from qtile_extras import widget
 from qtile_extras.widget.decorations import PowerLineDecoration
 
 import subprocess
+import os
+
+PA_MIXER = os.system('pamixer --version') == 0
+audio_backend = 'pamixer' if PA_MIXER else 'amixer'
+
+audio_commands = {
+        'pamixer': {'up': 'pamixer -i 5', 'down': 'pamixer -d 5', 'mute': 'pamixer -t'},
+        'amixer': {'up': 'amixer -D pulse sset Master 5%+', 'down':'amixer -D pulse sset Master 5%-', 'mute': 'amixer -D pulse sset Master 1+ toggle'}
+}.get(audio_backend, {})
 
 @hook.subscribe.startup_once
 def autostart():
-    pass
-    #subprocess.Popen(["picom", "-b"])
+    subprocess.Popen(["picom", "-b"])
     subprocess.Popen(["xset", "-b"]) # Disables PC Speaker Beeps with audio config
     #subprocess.Popen(["bash", "/home/mike/ultrawide.layout.sh"])
-    #subprocess.Popen(["xrandr", "--output", "DP-4", "--mode", "3440x1440", "--rate", "100"])
+    subprocess.Popen(["xrandr", "--output", "DP-4", "--mode", "3440x1440", "--rate", "100"])
 
 mod = "mod4"
 terminal = "/usr/bin/kitty"
@@ -95,9 +103,9 @@ keys = [
     Key([mod, "control"], "q", lazy.shutdown(), desc="Shutdown Qtile"),
     Key([mod], "r", lazy.spawncmd(), desc="Spawn a command using a prompt widget"),
     Key([mod, "control"], "s", lazy.spawn("systemctl suspend"), desc="Suspend session"),
-    Key([],"XF86AudioMute", lazy.spawn("pamixer -t"), desc="Mute Volume" ),
-    Key([],"XF86AudioLowerVolume", lazy.spawn("pamixer -d 5"), desc="Lower Volume" ),
-    Key([],"XF86AudioRaiseVolume", lazy.spawn("pamixer -i 5"), desc="Raise Volume" ),
+    Key([],"XF86AudioMute", lazy.spawn(audio_commands.get('mute','')), desc="Mute Volume" ),
+    Key([],"XF86AudioLowerVolume", lazy.spawn(audio_commands.get('down','')), desc="Lower Volume" ),
+    Key([],"XF86AudioRaiseVolume", lazy.spawn(audio_commands.get('up', '')), desc="Raise Volume" ),
     Key([],"XF86MonBrightnessUp", lazy.spawn("brightnessctl s +10%"), desc="Raise Brightness"),
     Key([],"XF86MonBrightnessDown", lazy.spawn("brightnessctl s 10%-"), desc="Lower Brightness")
 ]
